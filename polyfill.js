@@ -20,3 +20,25 @@ function sendMessageToCurrentWindow(action, data) {
         console.error("Error sending message to current window: ", error);
     }
 }
+
+// Storage utility
+const storageUtil = {
+  async get(key) {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([key], function(result) {
+        resolve(result[key]);
+      });
+    });
+  },
+  
+  async set(key, value) {
+    return new Promise((resolve) => {
+      chrome.storage.local.set({ [key]: value }, function() {
+        resolve();
+      });
+    });
+  }
+};
+
+// Make it available globally
+window.storageUtil = storageUtil;

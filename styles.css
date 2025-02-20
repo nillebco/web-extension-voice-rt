@@ -12,3 +12,17 @@ p {
   margin-top: 20px;
   font-size: 18px;
 }
+
+.api-key-section {
+  margin-bottom: 20px;
+}
+
+#apiKey {
+  padding: 8px;
+  margin-right: 8px;
+  width: 250px;
+}
+
+#saveKey {
+  padding: 8px 16px;
+}

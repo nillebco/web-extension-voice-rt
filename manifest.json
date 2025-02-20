@@ -21,6 +21,7 @@
       ],
       "js": [
         "polyfill.js",
+        "voiceRealTime.js",
         "recognition.js",
         "content.js"
       ]

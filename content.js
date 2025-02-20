@@ -16,8 +16,11 @@ addListener((message, sender, sendResponse) => {
     console.log("Message received from:", sender.id);
     
     switch (message.action) {
-        case "requestMicrophonePermission":
-            startRecognition();
+        case "startVoiceSession":
+            startSession();
+            break;
+        case "stopVoiceSession":
+            stopSession();
             break;
         case "recognitionStarted":
             console.log("Content - Recognition started");
