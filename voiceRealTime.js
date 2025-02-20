@@ -1,6 +1,23 @@
 let dataChannel = null;
 let peerConnection = null;
 
+async function sessionUpdate(instructions) {
+  if (!dataChannel) {
+    console.error("No data channel found");
+    return;
+  }
+
+  const event = {
+    type: "session.update",
+    session: {
+      instructions
+    },
+  };
+  
+  // WebRTC data channel and WebSocket both have .send()
+  dataChannel.send(JSON.stringify(event));
+}
+
 async function startSession() {
   // Create a peer connection
   const pc = new RTCPeerConnection();
