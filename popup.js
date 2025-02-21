@@ -31,4 +31,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     sendMessageToActiveTab("stopVoiceSession");
     window.close();
   });
+
+  document.getElementById("generateReaderContent").addEventListener("click", () => {
+    console.log("Generating reader content");
+    sendMessageToActiveTab("generateReaderContent");
+    window.close();
+  });
 });

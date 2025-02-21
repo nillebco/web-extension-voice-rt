@@ -7,6 +7,10 @@ const injectMicrophonePermissionIframe = () => {
     document.body.appendChild(iframe);
 };
 
+const injectReaderContentIframe = (article) => {
+    document.body.innerHTML = article.content;
+};
+
 // allow microphone permission via a menu like
 // brave://settings/content/siteDetails?site=chrome-extension%3A%2F%2Fajknliokcllkolhdgjdbndfpchlofial%2F
 injectMicrophonePermissionIframe();
@@ -16,6 +20,10 @@ addListener((message, sender, sendResponse) => {
     console.log("Message received from:", sender.id);
     
     switch (message.action) {
+        case "generateReaderContent":
+            const article = generateReaderContent();
+            injectReaderContentIframe(article);
+            break;
         case "startVoiceSession":
             startSession();
             break;

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Speech Recognition Extension",
-  "version": "1.0",
-  "description": "A simple speech recognition Chrome extension.",
+  "name": "Speak with the web page",
+  "version": "0.1",
+  "description": "Too long to read? Let the web page speak to you. Ask for a summary, ask questions, execute simple functions.",
   "permissions": [
     "activeTab",
     "storage",
@@ -23,6 +23,8 @@
         "polyfill.js",
         "voiceRealTime.js",
         "recognition.js",
+        "lib/Readability.js",
+        "reader.js",
         "content.js"
       ]
     }
@@ -31,10 +33,11 @@
     {
       "resources": [
         "permissions.html",
-        "requestPermissions.js"
+        "requestPermissions.js",
+        "lib/Readability.js"
       ],
       "matches": [
-        "*://*/*"
+        "<all_urls>"
       ]
     }
   ],
