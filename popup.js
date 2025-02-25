@@ -1,38 +1,72 @@
 document.addEventListener("DOMContentLoaded", async () => {
-  const apiKeyInput = document.getElementById("apiKey");
-  const saveKeyButton = document.getElementById("saveKey");
-
-  // Load saved API key when popup opens
+  // Get button elements
+  const startButton = document.getElementById("start");
+  const stopButton = document.getElementById("stop");
+  const readerButton = document.getElementById("generateReaderContent");
+  
+  // Load saved settings
   const savedApiKey = await storageUtil.get('openaiApiKey');
+  const savedLanguage = await storageUtil.get('language') || 'en-US';
+  const savedVoice = await storageUtil.get('voice') || 'nova';
+  
+  // Set initial values
   if (savedApiKey) {
-    apiKeyInput.value = savedApiKey;
+    document.getElementById("apiKey").value = "********";
+    // Enable voice buttons if API key exists
+    startButton.disabled = false;
+    stopButton.disabled = false;
+  } else {
+    // Disable voice buttons if no API key
+    startButton.disabled = true;
+    stopButton.disabled = true;
   }
-
-  // Save API key
-  saveKeyButton.addEventListener("click", async () => {
-    const apiKey = apiKeyInput.value.trim();
-    if (apiKey) {
+  
+  document.getElementById("language").value = savedLanguage;
+  document.getElementById("voice").value = savedVoice;
+  
+  // Save API key when it changes
+  document.getElementById("apiKey").addEventListener("change", async (e) => {
+    const apiKey = e.target.value.trim();
+    if (apiKey && apiKey !== "********") {
       await storageUtil.set('openaiApiKey', apiKey);
-      alert('API key saved successfully!');
-    } else {
-      alert('Please enter an API key');
+      console.log('API key saved successfully!');
+      // Enable voice buttons when API key is set
+      startButton.disabled = false;
+      stopButton.disabled = false;
+    } else if (apiKey === "") {
+      // If API key is cleared, disable buttons and remove from storage
+      await storageUtil.set('openaiApiKey', null);
+      startButton.disabled = true;
+      stopButton.disabled = true;
     }
   });
-
-  // Existing start button functionality
-  document.getElementById("start").addEventListener("click", () => {
-    console.log("Requesting microphone permission");
+  
+  // Save language preference
+  document.getElementById("language").addEventListener("change", async (e) => {
+    await storageUtil.set('language', e.target.value);
+    console.log('Language preference saved!');
+  });
+  
+  // Save voice preference
+  document.getElementById("voice").addEventListener("change", async (e) => {
+    await storageUtil.set('voice', e.target.value);
+    console.log('Voice preference saved!');
+  });
+  
+  // Action buttons
+  startButton.addEventListener("click", () => {
+    console.log("Starting voice session");
     sendMessageToActiveTab("startVoiceSession");
     window.close();
   });
 
-  document.getElementById("stop").addEventListener("click", () => {
+  stopButton.addEventListener("click", () => {
     console.log("Stopping voice session");
     sendMessageToActiveTab("stopVoiceSession");
     window.close();
   });
 
-  document.getElementById("generateReaderContent").addEventListener("click", () => {
+  readerButton.addEventListener("click", () => {
     console.log("Generating reader content");
     sendMessageToActiveTab("generateReaderContent");
     window.close();

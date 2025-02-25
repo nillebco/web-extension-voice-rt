@@ -1,18 +1,51 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Speech Recognition</title>
+  <title>Speak with the web page</title>
   <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
-  <h1>Speech Recognition</h1>
-  <div class="api-key-section">
-    <input type="password" id="apiKey" placeholder="Enter OpenAI API Key">
-    <button id="saveKey">Save API Key</button>
+  <h1>&#x26A1; Speak with the web page</h1>
+  <h2>&#x2699;&#xFE0F; Settings</h2>
+  
+  <div class="setting-row">
+    <label for="language">Language</label>
+    <select id="language" class="combo-box">
+      <option value="en-US">English (US)</option>
+      <option value="fr-FR">French</option>
+      <option value="es-ES">Spanish</option>
+      <option value="it-IT">Italian</option>
+    </select>
   </div>
-  <button id="start">Start Voice Session</button>
-  <button id="stop">Stop Voice Session</button>
-  <button id="generateReaderContent">Generate Reader Content</button>
+  
+  <div class="setting-row">
+    <label for="apiKey">OpenAI API Key</label>
+    <input type="password" id="apiKey" placeholder="Enter your API key" value="********">
+  </div>
+  
+  <div class="setting-row">
+    <label for="voice">Voice</label>
+    <select id="voice" class="combo-box">
+      <option value="ash">Ash</option>
+      <option value="nova">Nova</option>
+      <option value="shimmer">Shimmer</option>
+      <option value="coral">Coral</option>
+      <option value="alloy">Alloy</option>
+      <option value="echo">Echo</option>
+      <option value="fable">Fable</option>
+      <option value="onyx">Onyx</option>
+      <option value="sage">Sage</option>
+    </select>
+  </div>
+  
+  <h2>&#x1F680; Actions</h2>
+  
+  <div class="actions-container">
+    <button id="generateReaderContent" class="action-button">Show Reader mode</button>
+    <button id="start" class="action-button">Start speaking</button>
+    <button id="stop" class="action-button">Stop speaking</button>
+  </div>
+  
   <script src="polyfill.js"></script>
   <script src="popup.js"></script>
 </body>

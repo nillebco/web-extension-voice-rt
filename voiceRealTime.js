@@ -9,7 +9,7 @@ async function sessionUpdate(instructions) {
 
   // voiceRealTime.js:18 Uncaught (in promise) InvalidStateError: Failed to execute 'send' on 'RTCDataChannel': RTCDataChannel.readyState is not 'open'
   if (dataChannel.readyState !== "open") {
-    console.error("Data channel is not open");
+    console.warn("Data channel is not open");
     dataChannel.addEventListener("open", () => {
       sessionUpdate(instructions);
     });
@@ -57,8 +57,12 @@ async function startSession() {
   await pc.setLocalDescription(offer);
 
   const baseUrl = "https://api.openai.com/v1/realtime";
+  const url = new URL(baseUrl);
   const model = "gpt-4o-realtime-preview-2024-12-17";
-  const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+  const voice = await storageUtil.get('selectedVoice') ?? "nova";
+  url.searchParams.set('model', model);
+  url.searchParams.set('voice', voice);
+  const sdpResponse = await fetch(url, {
     method: "POST",
     body: offer.sdp,
     headers: {

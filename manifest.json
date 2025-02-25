@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Speak with the web page",
   "version": "0.1",
-  "description": "Too long to read? Let the web page speak to you. Ask for a summary, ask questions, execute simple functions.",
+  "description": "Too long to read? Let the web page speak to you. Ask for a summary, ask questions, execute simple functions. Available on all the pagesm includes a reader mode.",
   "permissions": [
     "activeTab",
     "storage",
@@ -33,8 +33,7 @@
     {
       "resources": [
         "permissions.html",
-        "requestPermissions.js",
-        "lib/Readability.js"
+        "requestPermissions.js"
       ],
       "matches": [
         "<all_urls>"
