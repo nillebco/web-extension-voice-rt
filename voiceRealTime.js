@@ -46,6 +46,11 @@ async function startSession() {
   const dc = pc.createDataChannel("oai-events");
   dataChannel = dc;
 
+  dc.addEventListener("open", () => {
+    console.log("Data channel is now open");
+    sendMessageToCurrentWindow("dataChannelOpen");
+  });
+
   dc.addEventListener("message", async (e) => {
     const realtimeEvent = JSON.parse(e.data);
     console.log(realtimeEvent);
