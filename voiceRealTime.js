@@ -7,6 +7,15 @@ async function sessionUpdate(instructions) {
     return;
   }
 
+  // voiceRealTime.js:18 Uncaught (in promise) InvalidStateError: Failed to execute 'send' on 'RTCDataChannel': RTCDataChannel.readyState is not 'open'
+  if (dataChannel.readyState !== "open") {
+    console.error("Data channel is not open");
+    dataChannel.addEventListener("open", () => {
+      sessionUpdate(instructions);
+    });
+    return;
+  }
+
   const event = {
     type: "session.update",
     session: {
@@ -70,6 +79,8 @@ async function startSession() {
     console.error("Error setting remote description:", error);
   }
   peerConnection = pc;
+
+  return pc;
 }
 
 function stopSession() {

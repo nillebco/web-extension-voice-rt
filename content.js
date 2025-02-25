@@ -15,17 +15,34 @@ const injectReaderContentIframe = (article) => {
 // brave://settings/content/siteDetails?site=chrome-extension%3A%2F%2Fajknliokcllkolhdgjdbndfpchlofial%2F
 injectMicrophonePermissionIframe();
 
-addListener((message, sender, sendResponse) => {
+async function showReader() {
+    console.log("Showing reader");
+    const article = await generateReaderContent();
+    injectReaderContentIframe(article);
+}
+
+async function startVoiceSession() {
+    console.log("Starting voice session");
+    const article = await generateReaderContent();
+    console.log("Article generated", article);
+    const context = article.title + " " + article.textContent;
+    const prompt = "You are an accessibility assistant. You are helping the end user to understand the content of a page, answering questions, reading a summary." +
+        "The language of the article might differ from the language of the user - please answer in thelanguage of the user. The content of the article follows;" +
+        context
+    await startSession();
+    await sessionUpdate(prompt);
+}
+
+addListener(async (message, sender, sendResponse) => {
     // Log the message source for debugging
     console.log("Message received from:", sender.id);
     
     switch (message.action) {
         case "generateReaderContent":
-            const article = generateReaderContent();
-            injectReaderContentIframe(article);
+            showReader();
             break;
         case "startVoiceSession":
-            startSession();
+            startVoiceSession();
             break;
         case "stopVoiceSession":
             stopSession();
