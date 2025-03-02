@@ -93,30 +93,24 @@ async function startVoiceSession() {
 }
 
 addListener(async (message, sender, sendResponse) => {
-    // Log the message source for debugging
     console.log("Message received from:", sender.id);
+    console.log("Message:", message);
     
     switch (message.action) {
         case "generateReaderContent":
-            showReader();
+            console.log("Content - Generating reader content");
+            await showReader();
             break;
         case "startVoiceSession":
-            startVoiceSession();
+            console.log("Content - Starting voice session");
+            await startVoiceSession();
             break;
         case "stopVoiceSession":
+            console.log("Content - Stopping voice session");
             stopSession();
             break;
-        case "recognitionStarted":
-            console.log("Content - Recognition started");
-            break;
-        case "recognitionEnded":
-            console.log("Content - Recognition ended");
-            break;
-        case "recognitionError":
-            console.log("Content - Recognition error: ", message.data);
-            break;
-        case "transcriptionResult":
-            console.log("Content - Transcription result: ", message.data);
+        case "realtimeVoiceSessionSetupError":
+            console.log("Content - Realtime voice session setup error:", message.data);
             break;
         case "realtimeEvent":
             console.log("Content - Received realtime event:", message.data);

@@ -1,6 +1,18 @@
 let dataChannel = null;
 let peerConnection = null;
 
+async function _sendInstructions(instructions) {
+  const event = {
+    type: "session.update",
+    session: {
+      instructions
+    },
+  };
+
+  // WebRTC data channel and WebSocket both have .send()
+  dataChannel.send(JSON.stringify(event));
+}
+
 async function sessionUpdate(instructions) {
   if (!dataChannel) {
     console.error("No data channel found");
@@ -9,27 +21,44 @@ async function sessionUpdate(instructions) {
 
   // voiceRealTime.js:18 Uncaught (in promise) InvalidStateError: Failed to execute 'send' on 'RTCDataChannel': RTCDataChannel.readyState is not 'open'
   if (dataChannel.readyState !== "open") {
-    console.warn("Data channel is not open");
+    console.log(`Data channel is not open but rather ${dataChannel.readyState}`);
     dataChannel.addEventListener("open", () => {
       sessionUpdate(instructions);
     });
     return;
   }
 
-  const event = {
-    type: "session.update",
-    session: {
-      instructions
-    },
-  };
-  
-  // WebRTC data channel and WebSocket both have .send()
-  dataChannel.send(JSON.stringify(event));
+  if (dataChannel.readyState === "open") {
+    _sendInstructions(instructions);
+  }
 }
 
 async function startSession() {
-  // Create a peer connection
-  const pc = new RTCPeerConnection();
+  console.log("Starting realtime voice session with OpenAI");
+  
+  // Log API key validity (without exposing the key)
+  const apiKey = await storageUtil.get('openaiApiKey');
+  console.log(`API key available: ${!!apiKey && apiKey.length > 20}`);
+  
+  // Create a peer connection with STUN servers and add multiple TURN servers
+  const pc = new RTCPeerConnection({
+    iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      // Add multiple free TURN servers for better connectivity
+      {
+        urls: 'turn:global.turn.twilio.com:3478?transport=udp',
+        username: 'f4b4035eaa76f77e3ffae85f5f6a17d02b66a4c48beee32ba12168c6e8febed3',
+        credential: 'w1WpDzeY9/yY3wh6YGUevMi7euPqeJRb+9H1J7yvDYY='
+      },
+      {
+        urls: 'turn:global.turn.twilio.com:3478?transport=tcp',
+        username: 'f4b4035eaa76f77e3ffae85f5f6a17d02b66a4c48beee32ba12168c6e8febed3',
+        credential: 'w1WpDzeY9/yY3wh6YGUevMi7euPqeJRb+9H1J7yvDYY='
+      }
+    ],
+    iceCandidatePoolSize: 10
+  });
 
   // Set up to play remote audio from the model
   const audioEl = document.createElement("audio");
@@ -42,14 +71,72 @@ async function startSession() {
   });
   pc.addTrack(ms.getTracks()[0]);
 
-  // Set up data channel for sending and receiving events
-  const dc = pc.createDataChannel("oai-events");
+  pc.oniceconnectionstatechange = () => {
+    console.log(`ICE connection state: ${pc.iceConnectionState}`);
+  };
+
+  pc.onconnectionstatechange = () => {
+    console.log(`Connection state: ${pc.connectionState}`);
+    if (pc.connectionState == 'failed') {
+      sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", "Connection failed");
+    }
+  };
+
+  pc.onsignalingstatechange = () => {
+    console.log(`Signaling state: ${pc.signalingState}`);
+  };
+
+  pc.onicegatheringstatechange = () => {
+    console.log(`ICE gathering state: ${pc.iceGatheringState}`);
+  };
+
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      console.log("New ICE candidate:", event.candidate);
+    } else {
+      console.log("ICE gathering complete");
+    }
+  };
+
+  // Add timeout for connection establishment
+  let connectionEstablished = false;
+  const connectionTimeout = setTimeout(() => {
+    if (!connectionEstablished) {
+      console.error("Connection timed out - unable to connect to OpenAI servers");
+      sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", 
+        "Connection timeout - check network firewall settings or try a different network");
+      stopSession(); // Clean up resources
+    }
+  }, 20000); // 20 second timeout
+
+  // Clear timeout if connection succeeds
+  pc.addEventListener('connectionstatechange', () => {
+    if (pc.connectionState === 'connected') {
+      connectionEstablished = true;
+      clearTimeout(connectionTimeout);
+      console.log("WebRTC connection successfully established!");
+    }
+  });
+
+  // Set up data channel with reliability options
+  const dc = pc.createDataChannel("oai-events", {
+    ordered: true,       // Guarantee message order
+    maxRetransmits: 30   // Retry sending messages up to 30 times
+  });
   dataChannel = dc;
 
-  dc.addEventListener("open", () => {
+  dc.onopen = () => {
     console.log("Data channel is now open");
     sendMessageToCurrentWindow("dataChannelOpen");
-  });
+  };
+
+  dc.onclose = () => {
+    console.log("Data channel closed");
+  };
+
+  dc.onerror = (error) => {
+    console.error("Data channel error:", error);
+  };
 
   dc.addEventListener("message", async (e) => {
     const realtimeEvent = JSON.parse(e.data);
@@ -58,34 +145,69 @@ async function startSession() {
   });
 
   // Start the session using the Session Description Protocol (SDP)
-  const offer = await pc.createOffer();
+  const offer = await pc.createOffer({
+    offerToReceiveAudio: true,
+    offerToReceiveVideo: false
+  });
   await pc.setLocalDescription(offer);
 
+  // Wait for ICE gathering to complete or timeout after 5 seconds
+  await Promise.race([
+    new Promise(resolve => {
+      if (pc.iceGatheringState === 'complete') {
+        resolve();
+      } else {
+        pc.addEventListener('icegatheringstatechange', () => {
+          if (pc.iceGatheringState === 'complete') {
+            resolve();
+          }
+        });
+      }
+    }),
+    new Promise(resolve => setTimeout(resolve, 5000))
+  ]);
+  
+  console.log("Sending offer to OpenAI with ICE candidates");
+  
+  // Modify the API request to include more diagnostic info
   const baseUrl = "https://api.openai.com/v1/realtime";
   const url = new URL(baseUrl);
   const model = "gpt-4o-realtime-preview-2024-12-17";
-  const voice = await storageUtil.get('selectedVoice') ?? "nova";
+  const voice = await storageUtil.get('selectedVoice') ?? "coral";
   url.searchParams.set('model', model);
   url.searchParams.set('voice', voice);
-  const sdpResponse = await fetch(url, {
-    method: "POST",
-    body: offer.sdp,
-    headers: {
-      Authorization: `Bearer ${await storageUtil.get('openaiApiKey')}`,
-      "Content-Type": "application/sdp"
-    },
-  });
-
-  const answer = {
-    type: "answer",
-    sdp: await sdpResponse.text(),
-  };
-
+  
+  console.log(`Sending request to: ${url.toString()} with model: ${model}, voice: ${voice}`);
+  
   try {
+    const sdpResponse = await fetch(url, {
+      method: "POST",
+      body: offer.sdp,
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/sdp"
+      },
+    });
+    
+    if (!sdpResponse.ok) {
+      const errorText = await sdpResponse.text();
+      console.error(`API response error: ${sdpResponse.status}`, errorText);
+      sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", 
+        `API error: ${sdpResponse.status} - ${errorText}`);
+      return null;
+    }
+    
+    const answer = {
+      type: "answer",
+      sdp: await sdpResponse.text(),
+    };
+
     await pc.setRemoteDescription(answer);
   } catch (error) {
-    sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", error);
-    console.error("Error setting remote description:", error);
+    console.error("API fetch error:", error);
+    sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", 
+      `API error: ${error.message}`);
+    return null;
   }
   peerConnection = pc;
 
@@ -97,13 +219,13 @@ function stopSession() {
     dataChannel.close();
   }
 
-  peerConnection.getSenders().forEach((sender) => {
-    if (sender.track) {
-      sender.track.stop();
-    }
-  });
-
   if (peerConnection) {
+    peerConnection.getSenders().forEach((sender) => {
+      if (sender.track) {
+        sender.track.stop();
+      }
+    });
+
     peerConnection.close();
   }
 

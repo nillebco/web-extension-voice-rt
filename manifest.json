@@ -5,12 +5,8 @@
   "description": "Too long to read? Let the web page speak to you. Ask for a summary, ask questions, execute simple functions. Available on all the pagesm includes a reader mode.",
   "permissions": [
     "activeTab",
-    "storage",
-    "scripting"
+    "storage"
   ],
-  "background": {
-    "service_worker": "background.js"
-  },
   "host_permissions": [
     "*://*/*"
   ],
@@ -22,7 +18,6 @@
       "js": [
         "polyfill.js",
         "voiceRealTime.js",
-        "recognition.js",
         "lib/Readability.js",
         "reader.js",
         "content.js"
