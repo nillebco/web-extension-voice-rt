@@ -12,8 +12,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   const savedKeyServer = await storageUtil.get('keyServer');
 
   // Set initial values
-  if (savedApiKey) {
-    apiKeyInput.value = "********";
+  if (savedApiKey || savedKeyServer) {
+    if (savedApiKey) {
+      apiKeyInput.value = "********";
+    }
     // Enable voice buttons if API key exists
     startButton.disabled = false;
     stopButton.disabled = false;

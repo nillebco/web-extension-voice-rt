@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Speak with the web page",
-  "version": "0.1",
+  "version": "0.2.1",
   "description": "Too long to read? Let the web page speak to you. Ask for a summary, ask questions, execute simple functions. Available on all pages",
   "permissions": [
     "activeTab",
