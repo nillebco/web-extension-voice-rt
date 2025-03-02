@@ -78,7 +78,7 @@ async function startSession() {
   pc.onconnectionstatechange = () => {
     console.log(`Connection state: ${pc.connectionState}`);
     if (pc.connectionState == 'failed') {
-      sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", "Connection failed");
+      sendDocumentMessage("realtimeVoiceSessionSetupError", "Connection failed");
     }
   };
 
@@ -103,7 +103,7 @@ async function startSession() {
   const connectionTimeout = setTimeout(() => {
     if (!connectionEstablished) {
       console.error("Connection timed out - unable to connect to OpenAI servers");
-      sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", 
+      sendDocumentMessage("realtimeVoiceSessionSetupError", 
         "Connection timeout - check network firewall settings or try a different network");
       stopSession(); // Clean up resources
     }
@@ -127,7 +127,7 @@ async function startSession() {
 
   dc.onopen = () => {
     console.log("Data channel is now open");
-    sendMessageToCurrentWindow("dataChannelOpen");
+    sendDocumentMessage("dataChannelOpen");
   };
 
   dc.onclose = () => {
@@ -141,7 +141,7 @@ async function startSession() {
   dc.addEventListener("message", async (e) => {
     const realtimeEvent = JSON.parse(e.data);
     console.log(realtimeEvent);
-    sendMessageToCurrentWindow("realtimeEvent", realtimeEvent);
+    sendDocumentMessage("realtimeEvent", realtimeEvent);
   });
 
   // Start the session using the Session Description Protocol (SDP)
@@ -192,7 +192,7 @@ async function startSession() {
     if (!sdpResponse.ok) {
       const errorText = await sdpResponse.text();
       console.error(`API response error: ${sdpResponse.status}`, errorText);
-      sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", 
+      sendDocumentMessage("realtimeVoiceSessionSetupError", 
         `API error: ${sdpResponse.status} - ${errorText}`);
       return null;
     }
@@ -205,7 +205,7 @@ async function startSession() {
     await pc.setRemoteDescription(answer);
   } catch (error) {
     console.error("API fetch error:", error);
-    sendMessageToCurrentWindow("realtimeVoiceSessionSetupError", 
+    sendDocumentMessage("realtimeVoiceSessionSetupError", 
       `API error: ${error.message}`);
     return null;
   }

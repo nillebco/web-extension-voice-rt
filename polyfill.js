@@ -1,4 +1,4 @@
-function addListener(listener) {
+function addExtensionListener(listener) {
   chrome.runtime.onMessage.addListener(listener);
 }
 
@@ -22,6 +22,16 @@ function sendMessageToCurrentWindow(action, data) {
     }
 }
 
+function sendMessage(action, data) {
+  // Could not establish connection. Receiving end does not exist.
+  try {
+    sendMessageToActiveTab(action, data);
+  } catch (error) {
+    console.error("Error sending message to active tab: ", error);
+    sendMessageToCurrentWindow(action, data);
+  }
+}
+
 // Storage utility
 const storageUtil = {
   async get(key) {
@@ -43,3 +53,14 @@ const storageUtil = {
 
 // Make it available globally
 window.storageUtil = storageUtil;
+
+const EVENT_NAME = chrome.runtime.id;
+
+function addDocumentListener(handler) {
+  document.addEventListener(EVENT_NAME, handler);
+}
+
+function sendDocumentMessage(action, data) {
+  const event = new CustomEvent(EVENT_NAME, { detail: { action, data } });
+  document.dispatchEvent(event);
+}
