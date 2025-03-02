@@ -3,12 +3,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   const startButton = document.getElementById("start");
   const stopButton = document.getElementById("stop");
   const readerButton = document.getElementById("generateReaderContent");
-  
+
   // Load saved settings
   const savedApiKey = await storageUtil.get('openaiApiKey');
-  const savedLanguage = await storageUtil.get('language') || 'en-US';
-  const savedVoice = await storageUtil.get('voice') || 'nova';
-  
+  const savedVoice = await storageUtil.get('voice') || 'coral';
+
   // Set initial values
   if (savedApiKey) {
     document.getElementById("apiKey").value = "********";
@@ -20,10 +19,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     startButton.disabled = true;
     stopButton.disabled = true;
   }
-  
-  document.getElementById("language").value = savedLanguage;
+
   document.getElementById("voice").value = savedVoice;
-  
+
   // Save API key when it changes
   document.getElementById("apiKey").addEventListener("change", async (e) => {
     const apiKey = e.target.value.trim();
@@ -40,19 +38,13 @@ document.addEventListener("DOMContentLoaded", async () => {
       stopButton.disabled = true;
     }
   });
-  
-  // Save language preference
-  document.getElementById("language").addEventListener("change", async (e) => {
-    await storageUtil.set('language', e.target.value);
-    console.log('Language preference saved!');
-  });
-  
+
   // Save voice preference
   document.getElementById("voice").addEventListener("change", async (e) => {
     await storageUtil.set('voice', e.target.value);
     console.log('Voice preference saved!');
   });
-  
+
   // Action buttons
   startButton.addEventListener("click", () => {
     console.log("Starting voice session");

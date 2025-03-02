@@ -169,7 +169,6 @@ async function startSession() {
   
   console.log("Sending offer to OpenAI with ICE candidates");
   
-  // Modify the API request to include more diagnostic info
   const baseUrl = "https://api.openai.com/v1/realtime";
   const url = new URL(baseUrl);
   const model = "gpt-4o-realtime-preview-2024-12-17";
@@ -232,31 +231,3 @@ function stopSession() {
   dataChannel = null;
   peerConnection = null;
 }
-
-/* server side
-const apiKey = process.env.OPENAI_API_KEY;
-async function getEphemeralKey(apiKey) {
-  try {
-    const response = await fetch(
-      "https://api.openai.com/v1/realtime/sessions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "gpt-4o-realtime-preview-2024-12-17",
-          voice: "verse",
-        }),
-      },
-    );
- 
-    const data = await response.json();
-    return data.client_secret.value;
-  } catch (error) {
-    console.error("Token generation error:", error);
-    return null;
-  }
-}
-*/
