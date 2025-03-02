@@ -3,14 +3,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   const startButton = document.getElementById("start");
   const stopButton = document.getElementById("stop");
   const readerButton = document.getElementById("generateReaderContent");
+  const apiKeyInput = document.getElementById("apiKey");
+  const keyServerInput = document.getElementById("keyServer");
 
   // Load saved settings
   const savedApiKey = await storageUtil.get('openaiApiKey');
   const savedVoice = await storageUtil.get('voice') || 'coral';
+  const savedKeyServer = await storageUtil.get('keyServer');
 
   // Set initial values
   if (savedApiKey) {
-    document.getElementById("apiKey").value = "********";
+    apiKeyInput.value = "********";
     // Enable voice buttons if API key exists
     startButton.disabled = false;
     stopButton.disabled = false;
@@ -20,10 +23,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     stopButton.disabled = true;
   }
 
+  if (savedKeyServer) {
+    keyServerInput.value = savedKeyServer;
+    apiKeyInput.disabled = true;
+  }
+
   document.getElementById("voice").value = savedVoice;
 
+  // Handle key server changes
+  keyServerInput.addEventListener("change", async (e) => {
+    const keyServer = e.target.value.trim();
+    await storageUtil.set('keyServer', keyServer);
+    
+    if (keyServer) {
+      apiKeyInput.disabled = true;
+      apiKeyInput.value = "********";
+      startButton.disabled = false;
+      stopButton.disabled = false;
+    } else {
+      apiKeyInput.disabled = false;
+      // If no key server and no API key, disable buttons
+      if (!await storageUtil.get('openaiApiKey')) {
+        startButton.disabled = true;
+        stopButton.disabled = true;
+      }
+    }
+  });
+
   // Save API key when it changes
-  document.getElementById("apiKey").addEventListener("change", async (e) => {
+  apiKeyInput.addEventListener("change", async (e) => {
     const apiKey = e.target.value.trim();
     if (apiKey && apiKey !== "********") {
       await storageUtil.set('openaiApiKey', apiKey);

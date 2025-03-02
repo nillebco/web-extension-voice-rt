@@ -33,11 +33,34 @@ async function sessionUpdate(instructions) {
   }
 }
 
+async function getApiKey(voice, model) {
+  const keyServer = await storageUtil.get('keyServer');
+  if (keyServer) {
+    console.log(`Getting API key from ${keyServer}`);
+    const url = new URL(keyServer);
+    const response = await fetch(url, {
+      method: "POST",
+      body: JSON.stringify({ voice, model }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    const data = await response.json();
+    return data.key;
+  }
+
+  console.log("Using local API key");
+  const apiKey = await storageUtil.get('openaiApiKey');
+  return apiKey;
+}
+
 async function startSession() {
   console.log("Starting realtime voice session with OpenAI");
   
   // Log API key validity (without exposing the key)
-  const apiKey = await storageUtil.get('openaiApiKey');
+  const voice = await storageUtil.get('selectedVoice') ?? "coral";
+  const model = "gpt-4o-realtime-preview-2024-12-17";
+  const apiKey = await getApiKey(voice, model);
   console.log(`API key available: ${!!apiKey && apiKey.length > 20}`);
   
   // Create a peer connection with STUN servers and add multiple TURN servers
@@ -171,8 +194,6 @@ async function startSession() {
   
   const baseUrl = "https://api.openai.com/v1/realtime";
   const url = new URL(baseUrl);
-  const model = "gpt-4o-realtime-preview-2024-12-17";
-  const voice = await storageUtil.get('selectedVoice') ?? "coral";
   url.searchParams.set('model', model);
   url.searchParams.set('voice', voice);
   
