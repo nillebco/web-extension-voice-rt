@@ -4,23 +4,18 @@ import { resolve } from 'path';
 
 function generateManifest() {
   const manifest = readJsonFile("manifest.json");
-  const pkg = readJsonFile("package.json");
-  
-  // Process template variables
-  const processedManifest = JSON.parse(
-    JSON.stringify(manifest)
-      .replace(/{{chrome}}/g, '')
-      .replace(/{{firefox}}/g, '')
-  );
-  
+  const pkg = readJsonFile("package.json");  
   return {
     description: pkg.description,
     version: pkg.version,
-    ...processedManifest,
+    ...manifest,
   };
 }
 
 export default defineConfig({
+  build: {
+    outDir: 'dist/chrome',
+  },
   resolve: {
     alias: {
       // Create an alias to make imports more reliable
@@ -31,15 +26,6 @@ export default defineConfig({
     webExtension({
       manifest: generateManifest,
       watchFilePaths: ["package.json", "manifest.json"],
-      // Explicitly include the polyfill in the bundle
-      webExtConfig: {
-        chromiumManifest: {
-          // Process chrome-specific manifest settings
-        },
-        firefoxManifest: {
-          // Process firefox-specific manifest settings
-        }
-      }
     }),
   ],
 });
