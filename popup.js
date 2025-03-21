@@ -1,3 +1,5 @@
+import { storageUtil, sendMessageToActiveTab } from "./polyfill";
+
 document.addEventListener("DOMContentLoaded", async () => {
   // Get button elements
   const startButton = document.getElementById("start");

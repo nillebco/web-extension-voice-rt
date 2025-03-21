@@ -1,0 +1,48 @@
+{
+  "name": "web-extension-voice-rt",
+  "version": "0.2.1",
+  "description": "Too long to read? Let the web page speak to you. Ask for a summary, ask questions, execute simple functions. Available on all pages",
+  "main": "content.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:safari": "bash ./safari/build.sh",
+    "analyze": "node build.mjs --analyze",
+    "lint": "eslint --ext .js,.mjs,.jsx .",
+    "lint:fix": "eslint --ext .js,.mjs,.jsx . --fix",
+    "pretty": "prettier --write ./**/*.{js,mjs,jsx,json,css,scss}",
+    "stage": "run-script-os",
+    "stage:default": "git add $(git diff --name-only --cached --diff-filter=d)",
+    "stage:win32": "powershell git add $(git diff --name-only --cached --diff-filter=d)",
+    "verify": "node .github/workflows/scripts/verify-search-engine-configs.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nillebco/web-extension-voice-rt.git"
+  },
+  "keywords": [
+    "chrome-extension",
+    "safari-extension",
+    "web-extension"
+  ],
+  "author": "Ivo Bellin Salarin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nillebco/web-extension-voice-rt/issues"
+  },
+  "homepage": "https://github.com/nillebco/web-extension-voice-rt#readme",
+  "type": "module",
+  "devDependencies": {
+    "eslint": "^8.57.1",
+    "globals": "^16.0.0",
+    "vite": "^5.0.0",
+    "vite-plugin-web-extension": "^4.0.0",
+    "webextension-polyfill": "^0.10.0"
+  },
+  "dependencies": {
+    "@mozilla/readability": "^0.6.0"
+  }
+}

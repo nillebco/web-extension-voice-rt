@@ -1,3 +1,15 @@
+import { addExtensionListener, addDocumentListener } from "./polyfill";
+import { generateReaderContent } from "./reader";
+import { 
+    startSession, 
+    sessionUpdate, 
+    stopSession 
+} from "./voiceRealTime";
+import {
+    showVoiceSessionLoader,
+    showVoiceSessionReady
+} from "./voiceSessionPanel";
+
 const injectMicrophonePermissionIframe = () => {
     const iframe = document.createElement("iframe");
     iframe.setAttribute("hidden", "hidden");

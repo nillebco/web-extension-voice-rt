@@ -1,4 +1,6 @@
-async function generateReaderContent() {
+import { Readability } from "@mozilla/readability";
+
+export async function generateReaderContent() {
     const documentClone = document.cloneNode(true);
 
     try {

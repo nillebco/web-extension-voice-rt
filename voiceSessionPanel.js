@@ -55,3 +55,5 @@ const hideVoiceSession = () => {
         setTimeout(() => indicator.remove(), 500);
     }
 }
+
+export { createVoiceStatusIndicator, showVoiceSessionLoader, showVoiceSessionReady, hideVoiceSession };

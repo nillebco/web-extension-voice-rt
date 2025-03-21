@@ -18,8 +18,8 @@ function sendMessageToCurrentWindow(action, data) {
   try {
     chrome.runtime.sendMessage({ action: action, data: data });
   } catch (error) {
-        console.error("Error sending message to current window: ", error);
-    }
+    console.error("Error sending message to current window: ", error);
+  }
 }
 
 function sendMessage(action, data) {
@@ -64,3 +64,5 @@ function sendDocumentMessage(action, data) {
   const event = new CustomEvent(EVENT_NAME, { detail: { action, data } });
   document.dispatchEvent(event);
 }
+
+export { addExtensionListener, addDocumentListener, sendDocumentMessage, sendMessage, storageUtil, EVENT_NAME, sendMessageToCurrentWindow, sendMessageToActiveTab };

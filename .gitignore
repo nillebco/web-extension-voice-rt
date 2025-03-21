@@ -1,0 +1,5 @@
+.venv
+.DS_Store
+node_modules
+dist
+web-extension-vite-vanilla-*

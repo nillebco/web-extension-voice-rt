@@ -1,3 +1,5 @@
+import { storageUtil, sendDocumentMessage } from "@polyfill";
+
 let dataChannel = null;
 let peerConnection = null;
 
@@ -252,3 +254,5 @@ function stopSession() {
   dataChannel = null;
   peerConnection = null;
 }
+
+export { startSession, sessionUpdate, stopSession, };
