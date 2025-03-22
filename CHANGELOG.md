@@ -11,6 +11,7 @@
   - Added a function to copy text to the clipboard. Works only if the window is focused.
 - Stop the voice session from the page itself
 - On mobile, display a larger "Voice Session Ready" window.
+- Improve the popup usability (making clearer the fact that only one between API Key and Keyserver are required)
 
 ## 0.2.1
 
