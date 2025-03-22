@@ -1,9 +1,10 @@
 import { addExtensionListener, addDocumentListener } from "./polyfill";
 import { generateReaderContent } from "./reader";
-import { 
-    startSession, 
-    sessionUpdate, 
-    stopSession 
+import {
+    startSession,
+    sessionUpdate,
+    stopSession,
+    processFunctionCalls
 } from "./voiceRealTime";
 import {
     showVoiceSessionLoader,
@@ -33,6 +34,74 @@ async function showReader() {
     injectReaderContentIframe(article);
 }
 
+const _toolsDefinitions = () => {
+    return [
+        {
+            type: 'function',
+            name: 'getPageHTML',
+            description: 'Gets the HTML for the current page',
+        },
+        {
+            type: 'function',
+            name: 'copyToClipboard',
+            description: 'Copies the specified text to the clipboard',
+            parameters: {
+                type: 'object',
+                properties: {
+                    text: { type: 'string', description: 'The text to copy to the clipboard' },
+                },
+                required: ['text']
+            },
+        },
+        {
+            type: 'function',
+            name: 'getCurrentPageUrl',
+            description: 'Gets the URL of the current page',
+        },
+        {
+            type: 'function',
+            name: 'changeBackgroundColor',
+            description: 'Changes the background color of a web page',
+            parameters: {
+                type: 'object',
+                properties: {
+                    color: { type: 'string', description: 'A hex value of the color' },
+                },
+            },
+        },
+        {
+            type: 'function',
+            name: 'stopSession',
+            description: 'Stops the voice session. Should be called when the user says "stop" or "end" or "quit" or "exit" or "bye" or "goodbye" or "thank you".',
+        }
+    ]
+}
+
+const fns = {
+    getPageHTML: () => {
+        return { success: true, html: document.documentElement.outerHTML };
+    },
+    copyToClipboard: async ({ text }) => {
+        try {
+            await navigator.clipboard.writeText(text);
+            return { success: true, message: "Text copied to clipboard" };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    },
+    getCurrentPageUrl: () => {
+        return { success: true, url: window.location.href };
+    },
+    changeBackgroundColor: ({ color }) => {
+        document.body.style.backgroundColor = color;
+        return { success: true, color };
+    },
+    stopSession: () => {
+        stopSession();
+        return { success: true };
+    },
+};
+
 async function startVoiceSession() {
     console.log("Starting voice session");
     showVoiceSessionLoader();
@@ -43,7 +112,8 @@ async function startVoiceSession() {
         "The language of the article might differ from the language of the user - please answer in thelanguage of the user. The content of the article follows;" +
         context
     await startSession();
-    await sessionUpdate(prompt);
+    await sessionUpdate(prompt, _toolsDefinitions());
+    await processFunctionCalls(fns);
 }
 
 addExtensionListener(async (message, sender, sendResponse) => {

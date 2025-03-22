@@ -3,11 +3,12 @@ import { storageUtil, sendDocumentMessage } from "@polyfill";
 let dataChannel = null;
 let peerConnection = null;
 
-async function _sendInstructions(instructions) {
+async function _sendInstructions(instructions, tools) {
   const event = {
     type: "session.update",
     session: {
-      instructions
+      instructions,
+      tools
     },
   };
 
@@ -15,7 +16,7 @@ async function _sendInstructions(instructions) {
   dataChannel.send(JSON.stringify(event));
 }
 
-async function sessionUpdate(instructions) {
+async function sessionUpdate(instructions, tools) {
   if (!dataChannel) {
     console.error("No data channel found");
     return;
@@ -25,14 +26,41 @@ async function sessionUpdate(instructions) {
   if (dataChannel.readyState !== "open") {
     console.log(`Data channel is not open but rather ${dataChannel.readyState}`);
     dataChannel.addEventListener("open", () => {
-      sessionUpdate(instructions);
+      sessionUpdate(instructions, tools);
     });
     return;
   }
 
   if (dataChannel.readyState === "open") {
-    _sendInstructions(instructions);
+    _sendInstructions(instructions, tools);
   }
+}
+
+async function processFunctionCalls(fns) {
+  dataChannel.addEventListener('message', async (ev) => {
+    const msg = JSON.parse(ev.data);
+    if (msg.type === 'response.function_call_arguments.done') {
+      const fn = fns[msg.name];
+      if (fn !== undefined) {
+        console.log(`Calling local function ${msg.name} with ${msg.arguments}`);
+        const args = JSON.parse(msg.arguments);
+        const result = await fn(args);
+        console.log('result', result);
+        // Let OpenAI know that the function has been called and share it's output
+        const event = {
+          type: 'conversation.item.create',
+          item: {
+            type: 'function_call_output',
+            call_id: msg.call_id, // call_id from the function_call message
+            output: JSON.stringify(result), // result of the function
+          },
+        };
+        dataChannel.send(JSON.stringify(event));
+        // Have assistant respond after getting the results
+        dataChannel.send(JSON.stringify({ type: "response.create" }));
+      }
+    }
+  });
 }
 
 async function getApiKey(voice, model) {
@@ -58,13 +86,13 @@ async function getApiKey(voice, model) {
 
 async function startSession() {
   console.log("Starting realtime voice session with OpenAI");
-  
+
   // Log API key validity (without exposing the key)
   const voice = await storageUtil.get('selectedVoice') ?? "coral";
   const model = "gpt-4o-realtime-preview-2024-12-17";
   const apiKey = await getApiKey(voice, model);
   console.log(`API key available: ${!!apiKey && apiKey.length > 20}`);
-  
+
   // Create a peer connection with STUN servers and add multiple TURN servers
   const pc = new RTCPeerConnection({
     iceServers: [
@@ -128,7 +156,7 @@ async function startSession() {
   const connectionTimeout = setTimeout(() => {
     if (!connectionEstablished) {
       console.error("Connection timed out - unable to connect to OpenAI servers");
-      sendDocumentMessage("realtimeVoiceSessionSetupError", 
+      sendDocumentMessage("realtimeVoiceSessionSetupError",
         "Connection timeout - check network firewall settings or try a different network");
       stopSession(); // Clean up resources
     }
@@ -191,16 +219,16 @@ async function startSession() {
     }),
     new Promise(resolve => setTimeout(resolve, 5000))
   ]);
-  
+
   console.log("Sending offer to OpenAI with ICE candidates");
-  
+
   const baseUrl = "https://api.openai.com/v1/realtime";
   const url = new URL(baseUrl);
   url.searchParams.set('model', model);
   url.searchParams.set('voice', voice);
-  
+
   console.log(`Sending request to: ${url.toString()} with model: ${model}, voice: ${voice}`);
-  
+
   try {
     const sdpResponse = await fetch(url, {
       method: "POST",
@@ -210,15 +238,15 @@ async function startSession() {
         "Content-Type": "application/sdp"
       },
     });
-    
+
     if (!sdpResponse.ok) {
       const errorText = await sdpResponse.text();
       console.error(`API response error: ${sdpResponse.status}`, errorText);
-      sendDocumentMessage("realtimeVoiceSessionSetupError", 
+      sendDocumentMessage("realtimeVoiceSessionSetupError",
         `API error: ${sdpResponse.status} - ${errorText}`);
       return null;
     }
-    
+
     const answer = {
       type: "answer",
       sdp: await sdpResponse.text(),
@@ -227,7 +255,7 @@ async function startSession() {
     await pc.setRemoteDescription(answer);
   } catch (error) {
     console.error("API fetch error:", error);
-    sendDocumentMessage("realtimeVoiceSessionSetupError", 
+    sendDocumentMessage("realtimeVoiceSessionSetupError",
       `API error: ${error.message}`);
     return null;
   }
@@ -255,4 +283,4 @@ function stopSession() {
   peerConnection = null;
 }
 
-export { startSession, sessionUpdate, stopSession, };
+export { startSession, sessionUpdate, stopSession, processFunctionCalls };
