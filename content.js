@@ -4,11 +4,12 @@ import {
     startSession,
     sessionUpdate,
     stopSession,
-    processFunctionCalls
+    dataChannelSend,
 } from "./voiceRealTime";
 import {
     showVoiceSessionLoader,
-    showVoiceSessionReady
+    showVoiceSessionReady,
+    hideVoiceSession,
 } from "./voiceSessionPanel";
 
 const injectMicrophonePermissionIframe = () => {
@@ -34,7 +35,7 @@ async function showReader() {
     injectReaderContentIframe(article);
 }
 
-const _toolsDefinitions = () => {
+function _toolsDefinitions() {
     return [
         {
             type: 'function',
@@ -86,7 +87,7 @@ const fns = {
             await navigator.clipboard.writeText(text);
             return { success: true, message: "Text copied to clipboard" };
         } catch (error) {
-            return { success: false, error: error.message };
+            return { success: false, error: error.message, hint: "Check the error: if there is something that the user can do to fix it, suggest it to the user, then ask her to repeat the action. Otherwise, tell her that a copy of the error has been pasted to the Developer Tools Console." };
         }
     },
     getCurrentPageUrl: () => {
@@ -98,9 +99,38 @@ const fns = {
     },
     stopSession: () => {
         stopSession();
+        hideVoiceSession();
         return { success: true };
     },
 };
+
+async function processRealtimeEvent(msg) {
+    if (msg.type === 'response.function_call_arguments.done') {
+        const fn = fns[msg.name];
+        if (fn !== undefined) {
+            console.log(`Calling local function ${msg.name} with arguments:`, msg.arguments);
+            const args = JSON.parse(msg.arguments);
+            const result = await fn(args);
+            console.log(`Function ${msg.name} executed successfully with result:`, result);
+            // Let OpenAI know that the function has been called and share its output
+            const event = {
+                type: 'conversation.item.create',
+                item: {
+                    type: 'function_call_output',
+                    call_id: msg.call_id, // call_id from the function_call message
+                    output: JSON.stringify(result), // result of the function
+                },
+            };
+            console.log(`Sending function output to AI:`, event);
+            dataChannelSend(event);
+            dataChannelSend({ type: "response.create" });
+        } else {
+            console.error(`Function ${msg.name} not found in registered functions. Available functions:`, Object.keys(fns));
+        }
+    } else if (msg.type === 'response.function_call.start') {
+        console.log(`AI is starting a function call: ${msg.name}`);
+    }
+}
 
 async function startVoiceSession() {
     console.log("Starting voice session");
@@ -113,7 +143,6 @@ async function startVoiceSession() {
         context
     await startSession();
     await sessionUpdate(prompt, _toolsDefinitions());
-    await processFunctionCalls(fns);
 }
 
 addExtensionListener(async (message, sender, sendResponse) => {
@@ -132,6 +161,7 @@ addExtensionListener(async (message, sender, sendResponse) => {
         case "stopVoiceSession":
             console.log("Content - Stopping voice session");
             stopSession();
+            hideVoiceSession();
             break;
     }
 });
@@ -144,14 +174,20 @@ addDocumentListener((event) => {
             break;
         case "realtimeEvent":
             console.log("Content - Received realtime event:", data);
+            processRealtimeEvent(data);
             break;
         case "dataChannelOpen":
             console.log("Content - Data channel is now open");
             showVoiceSessionReady();
             break;
+        case "realtimeError":
+            console.log("Content - Realtime error:", data);
+            hideVoiceSession();
+            break;
         case "stopVoiceSession":
             console.log("Content - Stopping voice session");
             stopSession();
+            hideVoiceSession();
             break;
     }
 });

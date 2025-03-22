@@ -4,6 +4,7 @@ let dataChannel = null;
 let peerConnection = null;
 
 async function _sendInstructions(instructions, tools) {
+  console.log("Sending instructions to AI with tools:", tools);
   const event = {
     type: "session.update",
     session: {
@@ -29,38 +30,9 @@ async function sessionUpdate(instructions, tools) {
       sessionUpdate(instructions, tools);
     });
     return;
-  }
-
-  if (dataChannel.readyState === "open") {
+  } else if (dataChannel.readyState === "open") {
     _sendInstructions(instructions, tools);
   }
-}
-
-async function processFunctionCalls(fns) {
-  dataChannel.addEventListener('message', async (ev) => {
-    const msg = JSON.parse(ev.data);
-    if (msg.type === 'response.function_call_arguments.done') {
-      const fn = fns[msg.name];
-      if (fn !== undefined) {
-        console.log(`Calling local function ${msg.name} with ${msg.arguments}`);
-        const args = JSON.parse(msg.arguments);
-        const result = await fn(args);
-        console.log('result', result);
-        // Let OpenAI know that the function has been called and share it's output
-        const event = {
-          type: 'conversation.item.create',
-          item: {
-            type: 'function_call_output',
-            call_id: msg.call_id, // call_id from the function_call message
-            output: JSON.stringify(result), // result of the function
-          },
-        };
-        dataChannel.send(JSON.stringify(event));
-        // Have assistant respond after getting the results
-        dataChannel.send(JSON.stringify({ type: "response.create" }));
-      }
-    }
-  });
 }
 
 async function getApiKey(voice, model) {
@@ -189,6 +161,7 @@ async function startSession() {
 
   dc.onerror = (error) => {
     console.error("Data channel error:", error);
+    sendDocumentMessage("realtimeError", error);
   };
 
   dc.addEventListener("message", async (e) => {
@@ -283,4 +256,10 @@ function stopSession() {
   peerConnection = null;
 }
 
-export { startSession, sessionUpdate, stopSession, processFunctionCalls };
+function dataChannelSend(message  ) {
+  if (dataChannel) {
+    dataChannel.send(JSON.stringify(message));
+  }
+}
+
+export { startSession, sessionUpdate, stopSession, dataChannelSend };
