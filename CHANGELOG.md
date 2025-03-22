@@ -8,7 +8,7 @@
   - Added a function to change the background color of the page.
   - Added a function to get the current page URL.
   - Added a function to get the HTML of the current page.
-  - Added a function to copy text to the clipboard. Works only if the window is focused.
+  - Added a function to copy text to the clipboard. Works only if the window is focused. Does not work on iOS because of platform limitations.
 - Stop the voice session from the page itself
 - On mobile, display a larger "Voice Session Ready" window.
 - Improve the popup usability (making clearer the fact that only one between API Key and Keyserver are required)
