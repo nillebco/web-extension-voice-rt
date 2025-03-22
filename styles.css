@@ -34,7 +34,7 @@ label {
   appearance: none;
 }
 
-#apiKey {
+#apiKey, #keyServer {
   width: 200px;
   padding: 8px;
   border: 1px solid #000;
@@ -66,4 +66,35 @@ label {
   opacity: 0.5;
   cursor: not-allowed;
   border-color: #999;
+}
+
+.auth-section {
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+}
+
+.auth-header {
+  margin: 0 0 10px 0;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.or-divider {
+  text-align: center;
+  margin: 12px 0;
+  font-weight: bold;
+  position: relative;
+}
+
+.or-divider::before,
+.or-divider::after {
+  content: "";
+  display: inline-block;
+  width: 40%;
+  height: 1px;
+  background-color: #ccc;
+  vertical-align: middle;
+  margin: 0 10px;
 }

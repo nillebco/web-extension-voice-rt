@@ -10,14 +10,20 @@
   <h1>&#x26A1; Speak with the web page</h1>
   <h2>&#x2699;&#xFE0F; Settings</h2>
 
-  <div class="setting-row">
-    <label for="apiKey">OpenAI API Key</label>
-    <input type="password" id="apiKey" placeholder="Enter your API key" value="********">
-  </div>
+  <div class="auth-section">
+    <p class="auth-header">Choose one authentication method:</p>
+    
+    <div class="setting-row">
+      <label for="apiKey">OpenAI API Key</label>
+      <input type="password" id="apiKey" placeholder="Enter your API key">
+    </div>
 
-  <div class="setting-row">
-    <label for="keyServer">Key Server</label>
-    <input type="text" id="keyServer" placeholder="Enter key server URL (optional)">
+    <div class="or-divider">OR</div>
+
+    <div class="setting-row">
+      <label for="keyServer">Key Server</label>
+      <input type="text" id="keyServer" placeholder="Enter key server URL" class="auth-input">
+    </div>
   </div>
 
   <div class="setting-row">
