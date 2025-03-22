@@ -79,5 +79,9 @@ addDocumentListener((event) => {
             console.log("Content - Data channel is now open");
             showVoiceSessionReady();
             break;
+        case "stopVoiceSession":
+            console.log("Content - Stopping voice session");
+            stopSession();
+            break;
     }
 });

@@ -1,6 +1,6 @@
 {
   "name": "web-extension-voice-rt",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Too long to read? Let the web page speak to you. Ask for a summary, ask questions, execute simple functions. Available on all pages",
   "main": "content.js",
   "directories": {
