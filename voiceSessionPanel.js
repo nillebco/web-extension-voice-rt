@@ -1,4 +1,4 @@
-import { sendMessage } from "./polyfill";
+import { sendDocumentMessage } from "./polyfill";
 
 // Create and inject voice session status indicator
 const createVoiceStatusIndicator = () => {
@@ -72,7 +72,7 @@ const showVoiceSessionReady = () => {
         stopButton.style.borderRadius = '4px';
         stopButton.style.cursor = 'pointer';
         stopButton.onclick = () => {
-            sendMessage("stopVoiceSession");
+            sendDocumentMessage("stopVoiceSession");
             hideVoiceSession();
         };
         indicator.appendChild(stopButton);
