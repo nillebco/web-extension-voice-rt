@@ -17,6 +17,20 @@ async function getUserPermission() {
       .catch((error) => {
         console.error("Error requesting microphone permission", error);
 
+        try {
+          chrome.runtime.sendMessage({ action: "requestPermissionsError", data: { error: error } });
+        } catch (error) {
+          console.error("Error sending message to current window: ", error);
+        }
+
+        try {
+          chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            chrome.tabs.sendMessage(tabs[0].id, { action: "requestPermissionsError", data: { error: error } });
+          });
+        } catch (error) {
+          console.error("Error sending message to active tab: ", error);
+        }
+
         reject(error);
       });
   });

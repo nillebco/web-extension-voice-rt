@@ -10,6 +10,7 @@ import {
     showVoiceSessionLoader,
     showVoiceSessionReady,
     hideVoiceSession,
+    showErrorPanel
 } from "./voiceSessionPanel";
 
 const injectMicrophonePermissionIframe = () => {
@@ -25,9 +26,6 @@ const injectReaderContentIframe = (article) => {
     document.body.innerHTML = article.content;
 };
 
-// allow microphone permission via a menu like
-// brave://settings/content/siteDetails?site=chrome-extension%3A%2F%2Fajknliokcllkolhdgjdbndfpchlofial%2F
-injectMicrophonePermissionIframe();
 
 async function showReader() {
     console.log("Showing reader");
@@ -156,6 +154,9 @@ addExtensionListener(async (message, sender, sendResponse) => {
             break;
         case "startVoiceSession":
             console.log("Content - Starting voice session");
+            // allow microphone permission via a menu like
+            // brave://settings/content/siteDetails?site=chrome-extension%3A%2F%2Fajknliokcllkolhdgjdbndfpchlofial%2F
+            injectMicrophonePermissionIframe();
             await startVoiceSession();
             break;
         case "stopVoiceSession":
@@ -163,7 +164,12 @@ addExtensionListener(async (message, sender, sendResponse) => {
             stopSession();
             hideVoiceSession();
             break;
-    }
+        case "requestPermissionsError":
+            console.log("Content - Permissions error:", message.data);
+            showErrorPanel("This extension requires microphone permissions to function. Please enable microphone access and try again.");
+            hideVoiceSession();
+            break;
+        }
 });
 
 addDocumentListener((event) => {

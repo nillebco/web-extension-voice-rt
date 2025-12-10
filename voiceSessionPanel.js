@@ -93,4 +93,24 @@ const hideVoiceSession = () => {
     }
 }
 
-export { createVoiceStatusIndicator, showVoiceSessionLoader, showVoiceSessionReady, hideVoiceSession };
+const showErrorPanel = (errorMessage) => {
+    const indicator = createVoiceStatusIndicator();
+    indicator.textContent = errorMessage;
+    indicator.style.backgroundColor = '#ffebee';
+    indicator.style.color = '#c62828';
+    indicator.style.border = '1px solid #ffcdd2';
+    document.body.appendChild(indicator);
+    
+    // Auto-hide the error after 5 seconds
+    setTimeout(() => {
+        hideVoiceSession();
+    }, 5000);
+};
+
+export { 
+    createVoiceStatusIndicator, 
+    showVoiceSessionLoader, 
+    showVoiceSessionReady, 
+    hideVoiceSession,
+    showErrorPanel 
+};

@@ -12,6 +12,7 @@
     "build:safari": "vite build && bash ./safari/build.sh",
     "build": "npm run build:chrome && npm run build:safari",
     "analyze": "node build.mjs --analyze",
+    "pack:chrome":"pushd dist/chrome && zip -r ../web-extension.zip . && popd",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "pretty": "prettier --write ./**/*.{js,mjs,jsx,json,css,scss}",
